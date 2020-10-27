@@ -1,13 +1,20 @@
 const express = require("express");
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-const { allowedNodeEnvironmentFlags } = require("process");
 // const questions = require ("./questions");
 // const viewFunction = require("./viewFunction");
 
+//employee bank
+const employees = [];
+//manager bank
+const managers = ["Finch", "Wright", "Loman"];
+
+const roles = ["machinist", "lawyer", "salesman"];
+
+const departments = ["sales", "manufacturing", "legal"];
+
 // Create express app instance.
 const app = express();
-// const PORT = process.env.PORT || 8080;
 
 // MySQL DB Connection Information (remember to change this with our specific credentials)
 const connection = mysql.createConnection({
@@ -60,13 +67,13 @@ const newEmployee = [{
 {
     type: "checkbox",
     message: "What is the employee's role?",
-    choices: ["machinist", "lawyer", "salesman"],
+    choices: roles,
     name: "roleName"
 },
 {
     type: "checkbox",
-    message: "Does employee have a manager?",
-    choices: ["yes", "no"],
+    message: "Who is the employees manager?",
+    choices: managers,
     name: "hasManager"
 }
 ];
@@ -84,7 +91,7 @@ const newRole = [{
 {
     type: "checkbox",
     message: "What is this role's department?",
-    choices: ["sales", "manufacturing", "legal"],
+    choices: departments,
     name: "roleDepartment"
 }]
 
@@ -217,11 +224,3 @@ menuPrompts()
 //update employee roles
 
 
-
-
-
-// app.listen(PORT, function() {
-//     // Log (server-side) when our server has started
-//     console.log("Server listening on: http://localhost:" + PORT);
-//   });
-  

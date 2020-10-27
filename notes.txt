@@ -1,0 +1,5 @@
+SELECT emp.id, emp.first_name, emp.last_name, roles.title, departments.name AS department, roles.salary, CONCAT(mng.first_name," ", mng.last_name) AS manager
+FROM employees AS emp
+INNER JOIN roles ON emp.roles_id = roles.id
+INNER JOIN departments ON roles.department_id = departments.id
+LEFT JOIN employees AS mng ON emp.manager_id = mng.id
