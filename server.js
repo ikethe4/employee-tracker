@@ -2,6 +2,7 @@ const express = require("express");
 const mysql = require("mysql");
 const inquirer = require("inquirer");
 // const questions = require ("./questions");
+// const viewFunction = require("./viewFunction");
 
 // Create express app instance.
 const app = express();
@@ -45,12 +46,86 @@ const updateType = [{
     name: "updateChoice"
 }];
 
-function actionSelect(){
-    inquirer.prompt(actionType).then(function(response){
+//inquirer functions
+function addQuestions(){
+    inquirer.prompt(addType).then(function(response){
         console.log(response)
     })
 };
-actionSelect()
+
+function viewQuestions(){
+    inquirer.prompt(viewType).then(function(response){
+        let choice = response.viewChoice[0];
+        console.log(choice)
+        if(choice === "department"){
+            viewDepartment()
+        };
+        if(choice === "role"){
+            viewRole()
+        };
+        if(choice === "employee"){
+            viewEmployee()
+        };
+        
+        
+    })
+};
+
+function updateQuestions(){
+    inquirer.prompt(updateType).then(function(response){
+        console.log(response)
+    })
+};
+
+//view functions
+function viewDepartment(){
+    connection.query("SELECT * FROM department", function(err, res){
+        if(err) throw err;
+        console.table(res);
+        connection.end();
+    })
+};
+
+function viewRole(){
+    connection.query("SELECT * FROM role", function(err, res){
+        if(err) throw err;
+        console.table(res);
+        connection.end();
+    })
+};
+
+function viewEmployee(){
+    connection.query("SELECT * FROM employee", function(err, res){
+        if(err) throw err;
+        console.table(res);
+        connection.end();
+    })
+};
+
+//begin menu prompt
+function menuPrompts(){
+    inquirer.prompt(actionType).then(function(response){
+        let choice = response.actionChoice[0];
+        console.log(choice);
+        if (choice === "add"){
+            console.log("add");
+            addQuestions();
+        }
+        if (choice === "view"){
+            console.log("view");
+            viewQuestions();
+        }
+        if (choice === "update"){
+            console.log("update");
+            updateQuestions();
+        }
+        
+        else {
+            console.log("Goodbye!");
+        }
+    })
+};
+menuPrompts()
 
 
 // add department
