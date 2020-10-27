@@ -1,6 +1,7 @@
 const express = require("express");
 const mysql = require("mysql");
 const inquirer = require("inquirer");
+const { allowedNodeEnvironmentFlags } = require("process");
 // const questions = require ("./questions");
 // const viewFunction = require("./viewFunction");
 
@@ -46,17 +47,65 @@ const updateType = [{
     name: "updateChoice"
 }];
 
+const newEmployee = [{
+    type: "input",
+    message: "What is the employee's first name?",
+    name: "firstName",
+},
+{
+    type: "Input",
+    message: "What is the employee's last name?",
+    name: "lastName"
+},
+{
+    type: "checkbox",
+    message: "What is the employee's role?",
+    choices: ["machinist", "lawyer", "salesman"],
+    name: "roleName"
+},
+{
+    type: "checkbox",
+    message: "Does employee have a manager?",
+    choices: ["yes", "no"],
+    name: "hasManager"
+}
+];
+
+const newRole = [{
+    type: "input",
+    message: "What is the new role?",
+    name: "roleName"
+},
+{
+    type: "input",
+    message: "What is the new role's salary (numbers only.  No commas)?",
+    name: "salary"
+},
+{
+    type: "checkbox",
+    message: "What is this role's department?",
+    choices: ["sales", "manufacturing", "legal"],
+    name: "roleDepartment"
+}]
+
 //inquirer functions
 function addQuestions(){
     inquirer.prompt(addType).then(function(response){
-        console.log(response)
+        let choice = response.addChoice[0];
+        console.log(choice);
+        if(choice === "employee"){
+            addEmployee();
+        }
+        if(choice === "role"){
+            addRole();
+        }
     })
 };
 
 function viewQuestions(){
     inquirer.prompt(viewType).then(function(response){
         let choice = response.viewChoice[0];
-        console.log(choice)
+        console.log(choice);
         if(choice === "department"){
             viewDepartment()
         };
@@ -101,6 +150,31 @@ function viewEmployee(){
         connection.end();
     })
 };
+
+//add functions
+function addRole(){
+    inquirer.prompt(newRole).then(function(response){
+    let roleName = response.roleName
+    let salary = response.salary
+    connection.query("INSERT INTO role(name, salary, department_id) VALUES (?)", [[roleName, salary, 1]], function(err, res){ 
+        if (err) throw err;
+        console.log(`${roleName} was added`)
+        connection.end()
+    })
+})
+};
+function addEmployee(){
+    inquirer.prompt(newEmployee).then(function(response){
+    let firstName = response.firstName
+    let lastName = response.lastName
+    connection.query("INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?)", [[firstName, lastName, 1, 1]], function(err, res){ 
+        if (err) throw err;
+        console.log(`${firstName} was added`)
+        connection.end()
+    })
+})
+};
+
 
 //begin menu prompt
 function menuPrompts(){
