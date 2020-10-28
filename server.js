@@ -38,7 +38,7 @@ const actionType = [{
 const addType = [{
     type: "checkbox",
     message: "What would you like to add?",
-    choices: ["employee", "role", "quit"],
+    choices: ["employee", "role", "department", "quit"],
     name: "addChoice"
 }];
 
@@ -49,30 +49,10 @@ const viewType = [{
     name: "viewChoice"
 }];
 
-const updateType = [{
-    type: "checkbox",
-    message: "Which employee's role would you like to update?",
-    choices: ["I'll", "need", "to", "pass", "all", "employees", "here", "quit"],
-    name: "updateChoice"
-}];
-
-
-
-const newRole = [{
+const newDepartment = [{
     type: "input",
-    message: "What is the new role?",
-    name: "roleName"
-},
-{
-    type: "input",
-    message: "What is the new role's salary (numbers only.  No commas)?",
-    name: "salary"
-},
-{
-    // type: "checkbox",
-    // message: "What is this role's department?",
-    // choices: departments,
-    // name: "roleDepartment"
+    message: "What is this department's name?",
+    name: "departmentName"
 }]
 
 //inquirer functions
@@ -85,6 +65,9 @@ function addQuestions() {
         }
         if (choice === "role") {
             addRole();
+        }
+        if (choice === "department"){
+            addDepartment()
         }
     })
 };
@@ -106,25 +89,61 @@ function viewQuestions() {
 
     })
 };
+//update functions
+async function updateQuestions() {
+    let roles = await connection.query("SELECT * FROM role");
+    let employees = await connection.query("SELECT * FROM employee");
+    const updateType = [{
+        type: "checkbox",
+        message: "Which employee's role would you like to update?",
+        choices: employees.map(function (employee) {
+            return {
+                name: employee.last_name,
+                value: employee.id
+            };
+        }),
+        name: "updateEmp"
+    },
+    {
+        type: "checkbox",
+        message: "What would you like the employee's new role to be?",
+        choices: roles.map(function (role) {
+            return {
+                name: role.name,
+                value: role.id
+            };
+        }),
+        name: "newRole"
+    }
 
-function updateQuestions() {
+];
     inquirer.prompt(updateType).then(function (response) {
-        console.log(response)
+        let updateEmp = response.updateEmp;
+        let newRole= response.newRole;
+        console.log(updateEmp);
+        console.log(newRole)
+        connection.query("UPDATE employee SET role_id = ? WHERE id = ?", [[newRole], [updateEmp]], function (err, res) {
+            if (err) throw err;
+            console.log(`role was added`)
+            menuPrompts()
+        })
+        
     })
-};
+};  
 
 //view functions
 function viewDepartment() {
     connection.query("SELECT * FROM department", function (err, res) {
         if (err) throw err;
         console.table(res);
-        connection.end();
+        menuPrompts();
     })
 };
 
 async function viewRole() {
     let roles = await connection.query("SELECT * FROM role")
     console.table(roles);
+    menuPrompts()
 
 };
 
@@ -132,25 +151,48 @@ function viewEmployee() {
     connection.query("SELECT * FROM employee", function (err, res) {
         if (err) throw err;
         console.table(res);
-        connection.end();
+        menuPrompts();
     })
 };
 
 //add functions
-function addRole() {
+async function addRole() {
+    let department = await connection.query("SELECT * FROM department");
+    const newRole = [{
+        type: "input",
+        message: "What is the new role?",
+        name: "roleName"
+    },
+    {
+        type: "input",
+        message: "What is the new role's salary (numbers only.  No commas)?",
+        name: "salary"
+    },
+    {
+        type: "checkbox",
+        message: "What is this role's department?",
+        choices: department.map(function(department) {
+            return {
+                name: department.name,
+                value: department.id
+            };
+        }),
+        name: "roleDepartment"
+    }]
     inquirer.prompt(newRole).then(function (response) {
         let roleName = response.roleName
         let salary = response.salary
-        connection.query("INSERT INTO role(name, salary, department_id) VALUES (?)", [[roleName, salary, 1]], function (err, res) {
+        let roleDepartment = response.roleDepartment;
+        connection.query("INSERT INTO role(name, salary, department_id) VALUES (?)", [[roleName, salary, roleDepartment]], function (err, res) {
             if (err) throw err;
             console.log(`${roleName} was added`)
-            connection.end()
+            menuPrompts()
         })
     })
 };
 async function addEmployee() {
     let roles = await connection.query("SELECT * FROM role");
-    let manager = await connection.query("SELECT last_name FROM employee WHERE manager_id is null");
+    let manager = await connection.query("SELECT * FROM employee WHERE manager_id is null");
     console.table(manager);
 
     console.log(roles);
@@ -191,11 +233,23 @@ async function addEmployee() {
         let firstName = response.firstName;
         let lastName = response.lastName;
         let roleID = response.roleName
-        connection.query("INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?)", [[firstName, lastName, roleID, 1]], function (err, res) {
+        let managerID = response.hasManager
+        connection.query("INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?)", [[firstName, lastName, roleID, managerID]], function (err, res) {
             if (err) throw err;
-            console.log(`${firstName} was added`);
-            console.log(response);
-            connection.end()
+            // console.log(`${firstName} was added`);
+            // console.log(response);
+            menuPrompts()
+        })
+    })
+};
+
+function addDepartment() {
+    inquirer.prompt(newDepartment).then(function (response) {
+        let departmentName = response.departmentName
+        connection.query("INSERT INTO department(name) VALUES (?)", [[departmentName]], function (err, res) {
+            if (err) throw err;
+            console.log(`${departmentName} was added`)
+            menuPrompts()
         })
     })
 };
